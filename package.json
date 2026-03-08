@@ -1,17 +1,19 @@
 {
   "name": "e-carnet",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
-  },
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "react-scripts": "5.0.1",
+  "react-router-dom": "^6.22.0",
+  "axios": "^1.6.7",
+  "react-icons": "^5.0.1",
+  "framer-motion": "^11.0.3",
+  "react-intersection-observer": "^9.5.3",
+  "react-parallax-tilt": "^1.7.226",
+  "react-typed": "^2.0.12"
+},
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -20,8 +22,7 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
