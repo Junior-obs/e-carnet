@@ -1,123 +1,189 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  FaUser, FaCalendarCheck, FaFileMedicalAlt, 
-  FaPills, FaNotesMedical, FaChartLine 
+  FaCalendarCheck, FaEnvelope, FaUserCircle, 
+  FaSignOutAlt, FaBell, FaSearch, FaArrowRight, FaClock,
+  FaShieldAlt, FaPlus, FaEllipsisH
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
-  const { user, isPatient, isMedecin } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const isMedecin = user?.role === 'medecin';
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const rdvData = isMedecin 
+    ? [
+        { nom: "Mamadou Diop", info: "Suivi Diabète Type 2", heure: "08:30", type: "Urgent", status: "En attente" },
+        { nom: "Awa Ndiaye", info: "Consultation Post-Op", heure: "10:00", type: "Normal", status: "Confirmé" }
+      ]
+    : [
+        { nom: "Dr. Babacar Sy", info: "Cardiologue - Clinique Casahous", heure: "14 Mars", type: "RDV", status: "Confirmé" },
+        { nom: "Dr. Aminata Fall", info: "Généraliste - Cabinet Médina", heure: "22 Mars", type: "RDV", status: "Rappel" }
+      ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        
-        {/* --- EN-TÊTE BIENVENUE --- */}
-        <header className="mb-10">
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4"
-          >
-            <div>
-              <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-                👋 Bonjour, <span className="text-blue-600 font-black">{user.prenom} {user.nom}</span> !
-              </h1>
-              <p className="text-gray-500 text-lg mt-2">
-                {isPatient 
-                  ? "Bienvenue dans votre carnet de santé numérique personnel." 
-                  : "Bienvenue dans votre espace de gestion médicale."}
-              </p>
+    <div className="min-h-screen bg-[#F1F5F9] flex flex-col font-sans text-slate-900">
+      
+      {/* --- NAVBAR --- */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-3 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          
+          {/* LOGO DEPUIS PUBLIC */}
+          <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/dashboard')}>
+            <div className="w-14 h-14 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+              <img 
+                src="/logo.png" 
+                alt="E-CARNET Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
+            <div className="flex flex-col">
+              <span className="font-black text-xl leading-none tracking-tighter text-[#28a745]">
+                E-CARNET<span className="text-slate-700">SANTÉ</span>
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Sénégal É-Santé</span>
+            </div>
+          </div>
+
+          {/* RECHERCHE */}
+          <div className="hidden lg:flex items-center bg-slate-100 border border-slate-200 px-4 py-2.5 rounded-2xl gap-3 w-96 focus-within:bg-white focus-within:ring-4 focus-within:ring-green-50 transition-all">
+            <FaSearch className="text-slate-400" />
+            <input type="text" placeholder="Rechercher un dossier..." className="bg-transparent outline-none text-sm w-full font-medium" />
+          </div>
+
+          <div className="flex items-center gap-5">
+            <button className="p-2.5 bg-slate-50 text-slate-500 hover:text-[#28a745] hover:bg-green-50 rounded-xl transition-all relative">
+              <FaBell />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+            </button>
             
-            <div className={`px-4 py-2 rounded-2xl shadow-sm border ${isMedecin ? 'bg-purple-50 border-purple-100 text-purple-700' : 'bg-blue-50 border-blue-100 text-blue-700'} font-bold flex items-center gap-2`}>
-              {isMedecin ? <FaNotesMedical /> : <FaUser />}
-              {isMedecin ? 'Espace Praticien' : 'Espace Patient'}
+            <div className="h-8 w-[1px] bg-slate-200"></div>
+
+            <div className="flex items-center gap-4 pl-2">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-black text-slate-800 leading-none">{user?.prenom} {user?.nom}</p>
+                <p className="text-[10px] font-bold text-[#28a745] uppercase tracking-widest mt-1.5 flex items-center justify-end gap-1">
+                  <span className="w-1.5 h-1.5 bg-[#28a745] rounded-full animate-pulse"></span> {user?.role}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-[18px] border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-[#28a745] font-black text-lg">
+                {user?.prenom?.[0]}
+              </div>
             </div>
-          </motion.div>
-        </header>
-
-        {/* --- STATISTIQUES --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <QuickStat 
-            title={isPatient ? "Prochain RDV" : "Patients aujourd'hui"} 
-            value={isPatient ? "Demain à 10h30" : "8 consultations"}
-            icon={<FaCalendarCheck />}
-            color="blue"
-          />
-          <QuickStat 
-            title={isPatient ? "Ordonnances" : "Dossiers en attente"} 
-            value={isPatient ? "2 actives" : "3 à valider"}
-            icon={<FaPills />} 
-            color="purple"
-          />
-          <QuickStat 
-            title="Dernière analyse" 
-            value="Il y a 3 jours"
-            icon={<FaChartLine />}
-            color="green"
-          />
+          </div>
         </div>
+      </header>
 
-        {/* --- ACTIONS PRINCIPALES --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <FaFileMedicalAlt className="text-blue-600" /> 
-              {isPatient ? "Mon Carnet de Santé" : "Gestion des Patients"}
+      <main className="max-w-7xl mx-auto w-full p-6 lg:p-10 flex-1">
+        
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+          <div>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-2 italic">
+              Bienvenue, {isMedecin ? 'Docteur' : ''} {user?.prenom}
             </h2>
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-2xl flex justify-between items-center hover:bg-blue-50 cursor-pointer transition-colors">
-                <div>
-                  <p className="font-bold text-gray-800">Historique des vaccins</p>
-                  <p className="text-xs text-gray-500">Dernière mise à jour le 12/01/2026</p>
-                </div>
-                <span className="text-blue-600 font-bold">Voir</span>
+            <p className="text-slate-500 font-medium flex items-center gap-2">
+              <FaClock className="text-green-500" /> Lundi 9 Mars 2026 • Dakar
+            </p>
+          </div>
+          
+          <button className="flex items-center justify-center gap-2 bg-[#28a745] hover:bg-green-700 text-white px-6 py-4 rounded-2xl font-bold shadow-xl shadow-green-100 transition-all active:scale-95">
+            <FaPlus /> {isMedecin ? 'Ajouter une consultation' : 'Prendre un rendez-vous'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          {/* COLONNE GAUCHE */}
+          <div className="lg:col-span-8 space-y-10">
+            <section className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200/60 overflow-hidden">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                <h3 className="text-xl font-black text-slate-800 tracking-tight italic underline decoration-green-400 decoration-4 underline-offset-8">Agenda du jour</h3>
+                <button className="text-[#28a745] font-bold text-sm hover:bg-green-50 px-4 py-2 rounded-xl transition-colors">
+                  Voir tout
+                </button>
               </div>
-            </div>
+
+              <div className="p-6 space-y-4">
+                {rdvData.map((rdv, i) => (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    key={i} 
+                    className="flex items-center justify-between p-6 rounded-[2rem] bg-white border border-slate-100 hover:shadow-lg hover:shadow-green-50 hover:border-green-100 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-transform group-hover:rotate-6 ${rdv.type === 'Urgent' ? 'bg-rose-50 text-rose-500' : 'bg-green-50 text-[#28a745]'}`}>
+                        {isMedecin ? <FaUserCircle /> : <FaCalendarCheck />}
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-800 text-lg group-hover:text-[#28a745] transition-colors">{rdv.nom}</h4>
+                        <p className="text-sm font-semibold text-slate-400">{rdv.info}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="text-lg font-black text-slate-700">{rdv.heure}</p>
+                      <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${rdv.type === 'Urgent' ? 'bg-rose-100 text-rose-600' : 'bg-green-100 text-[#28a745]'}`}>
+                        {rdv.status}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </section>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-3xl shadow-lg text-white">
-            <h2 className="text-xl font-bold mb-6">Résumé du Profil</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between border-b border-white/20 pb-2 text-sm">
-                <span className="opacity-80">Email</span>
-                <span className="font-medium">{user.email}</span>
+          {/* COLONNE DROITE */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-200/60">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-lg font-black text-slate-800 flex items-center gap-3 italic">
+                  <div className="p-2 bg-green-50 rounded-lg text-[#28a745] text-sm"><FaEnvelope /></div>
+                  Notifications
+                </h3>
+                <FaEllipsisH className="text-slate-300" />
               </div>
-              <div className="flex justify-between">
-                <span className="opacity-80">Rôle</span>
-                <span className="font-bold uppercase text-xs bg-white text-blue-600 px-2 py-1 rounded">
-                   {user.role}
-                </span>
+              
+              <div className="space-y-6 text-sm">
+                 <p className="text-slate-500 italic text-center py-4">Aucun nouveau message pour le moment.</p>
+              </div>
+            </div>
+
+            {/* SECTION SECURITE */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative shadow-2xl overflow-hidden group">
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <FaShieldAlt className="text-green-400 text-sm" />
+                  <span className="text-green-400 text-[10px] font-black uppercase tracking-widest">Protection Active</span>
+                </div>
+                <h4 className="text-xl font-bold mb-3 tracking-tight text-white">E-CARNET PRIVACY</h4>
+                <p className="text-slate-400 text-xs leading-relaxed mb-6 font-medium">
+                  Vos données médicales sont cryptées et hébergées conformément aux normes de la CDP Sénégal.
+                </p>
+                <button className="w-full py-3.5 bg-white/5 hover:bg-[#28a745] border border-white/10 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2">
+                  Paramètres de sécurité <FaArrowRight className="text-[10px]" />
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
+      </main>
 
-function QuickStat({ title, value, icon, color }) {
-  const colors = { blue: "bg-blue-600", purple: "bg-purple-600", green: "bg-green-600" };
-  return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
-      <div className={`w-14 h-14 ${colors[color]} text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">{title}</p>
-        <p className="text-xl font-black text-gray-800">{value}</p>
-      </div>
+      {/* FOOTER */}
+      <footer className="px-10 py-8 max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 border-t border-slate-200/60 mt-10">
+        <p className="text-xs font-bold uppercase tracking-widest">© 2026 E-CARNET SANTE MEDICAL • Plateforme Agréée</p>
+        <button 
+          onClick={() => { logout(); navigate('/'); }}
+          className="group flex items-center gap-3 px-5 py-2 hover:bg-rose-50 rounded-xl text-slate-500 hover:text-rose-600 font-bold transition-all text-sm"
+        >
+          <FaSignOutAlt className="group-hover:-translate-x-1 transition-transform" /> 
+          Déconnexion sécurisée
+        </button>
+      </footer>
     </div>
   );
 }

@@ -1,110 +1,69 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth doit être utilisé dans un AuthProvider');
-  }
-  return context;
-};
-
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
+    const savedUser = localStorage.getItem('e_carnet_user');
+    if (savedUser) setUser(JSON.parse(savedUser));
     setLoading(false);
   }, []);
 
-  // --- LOGIQUE D'INSCRIPTION ---
-  const register = async (userData) => {
+  const login = async (email, password) => {
     try {
-      // On simule une attente réseau
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // On sauvegarde l'utilisateur pour la session de démo (sans le password)
-      const { password, confirmPassword, ...userToSave } = userData;
-      localStorage.setItem('registeredUser', JSON.stringify(userToSave));
-      
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: "Erreur lors de la création du compte" };
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.user);
+        localStorage.setItem('e_carnet_user', JSON.stringify(data.user));
+        return { success: true, role: data.user.role };
+      }
+      return { success: false, error: data.message };
+    } catch (e) {
+      return { success: false, error: "Serveur non joignable" };
     }
   };
 
-  // --- LOGIQUE DE CONNEXION ---
-  const login = async (email, password) => {
+  const register = async (userData) => {
     try {
-      setError(null);
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // On vérifie si c'est l'utilisateur qui vient de s'inscrire
-      const savedUser = JSON.parse(localStorage.getItem('registeredUser'));
-      let userData;
-
-      if (savedUser && savedUser.email === email) {
-        userData = { ...savedUser, id: 'USR-' + Date.now() };
-      } else {
-        // Fallback démo par défaut si on n'est pas passé par Register
-        userData = {
-          id: 'DEMO-' + Date.now(),
-          email: email,
-          prenom: "Utilisateur",
-          nom: "Démo",
-          role: email.includes('@cabinet.sn') ? 'medecin' : 'patient',
-          telephone: "77 000 00 00"
-        };
-      }
-
-      const fakeToken = 'fake-jwt-' + btoa(email);
-      localStorage.setItem('token', fakeToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      setToken(fakeToken);
-      setUser(userData);
-      return { success: true };
-    } catch (err) {
-      setError("Email ou mot de passe incorrect");
-      return { success: false };
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            nom: userData.nom,
+            prenom: userData.prenom,
+            email: userData.email,
+            password: userData.password,
+            role: userData.role,
+            date_naissance: userData.dateNaissance, // On envoie avec l'underscore pour le SQL
+            specialite: userData.specialite
+        })
+      });
+      const data = await res.json();
+      return res.ok ? { success: true } : { success: false, error: data.message };
+    } catch (e) {
+      return { success: false, error: "Erreur serveur" };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
     setUser(null);
-  };
-
-  const value = {
-    user,
-    token,
-    loading,
-    error,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!token,
-    isPatient: user?.role === 'patient',
-    isMedecin: user?.role === 'medecin'
+    localStorage.removeItem('e_carnet_user');
+    window.location.href = "/login";
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-};
+}
 
-export default AuthContext;
+export const useAuth = () => useContext(AuthContext);

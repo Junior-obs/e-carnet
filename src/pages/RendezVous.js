@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaClock, FaUserMd, FaCheck, FaTimes, FaPlus } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaUserMd, FaCheck, FaTimes, FaPlus, FaMapMarkerAlt, FaNotesMedical } from 'react-icons/fa';
 
 function RendezVous({ userRole }) {
   const [rendezvous, setRendezvous] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
   const [filter, setFilter] = useState('tous');
   const [loading, setLoading] = useState(true);
   const [newRdv, setNewRdv] = useState({
@@ -15,65 +14,53 @@ function RendezVous({ userRole }) {
     notes: ''
   });
 
+  // Liste des médecins localisée au Sénégal
+  const medecins = [
+    { id: 1, nom: 'Dr. Amadou Sy', specialite: 'Médecine Générale', structure: 'Hôpital Principal' },
+    { id: 2, nom: 'Dr. Fatoumata Sow', specialite: 'Cardiologie', structure: 'Clinique de la Madeleine' },
+    { id: 3, nom: 'Dr. Ibrahima Kane', specialite: 'Dermatologie', structure: 'Hôpital Aristide Le Dantec' },
+    { id: 4, nom: 'Dr. Khadija Fall', specialite: 'Pédiatrie', structure: 'Centre de Santé Gaspard Kamara' },
+  ];
+
   useEffect(() => {
-    // Simuler le chargement des rendez-vous
     setTimeout(() => {
       setRendezvous([
         { 
           id: 1,
           date: '2024-03-15', 
           heure: '14:30',
-          medecin: 'Dr. Martin',
-          specialite: 'Médecine générale',
-          motif: 'Consultation de routine',
-          notes: 'Apporter les résultats d\'analyse',
+          medecin: 'Dr. Amadou Sy',
+          specialite: 'Médecine Générale',
+          motif: 'Consultation annuelle',
+          notes: 'Vérification tension artérielle',
           statut: 'confirmé'
         },
         { 
           id: 2,
           date: '2024-03-22', 
           heure: '09:00',
-          medecin: 'Dr. Bernard',
+          medecin: 'Dr. Fatoumata Sow',
           specialite: 'Cardiologie',
-          motif: 'Analyse sanguine',
-          notes: 'Être à jeun',
+          motif: 'Contrôle post-opératoire',
+          notes: 'Venir avec le carnet de santé',
           statut: 'en_attente'
         },
         { 
-          id: 3,
-          date: '2024-03-28', 
-          heure: '11:15',
-          medecin: 'Dr. Dubois',
-          specialite: 'Dermatologie',
-          motif: 'Suivi',
-          statut: 'confirmé'
-        },
-        { 
           id: 4,
-          date: '2024-03-05', 
+          date: '2024-03-01', 
           heure: '10:30',
-          medecin: 'Dr. Martin',
-          specialite: 'Médecine générale',
-          motif: 'Vaccin',
-          statut: 'termine'
+          medecin: 'Dr. Amadou Sy',
+          specialite: 'Médecine Générale',
+          motif: 'Vaccination grippe',
+          statut: 'terminé'
         },
       ]);
       setLoading(false);
-    }, 1000);
+    }, 800);
   }, []);
 
-  const medecins = [
-    { id: 1, nom: 'Dr. Martin', specialite: 'Médecine générale' },
-    { id: 2, nom: 'Dr. Bernard', specialite: 'Cardiologie' },
-    { id: 3, nom: 'Dr. Dubois', specialite: 'Dermatologie' },
-    { id: 4, nom: 'Dr. Petit', specialite: 'Pédiatrie' },
-  ];
-
   const handleInputChange = (e) => {
-    setNewRdv({
-      ...newRdv,
-      [e.target.name]: e.target.value
-    });
+    setNewRdv({ ...newRdv, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = (e) => {
@@ -86,27 +73,22 @@ function RendezVous({ userRole }) {
       specialite: medecinSelect?.specialite,
       statut: 'en_attente'
     };
-    setRendezvous([...rendezvous, nouveauRdv]);
+    setRendezvous([nouveauRdv, ...rendezvous]);
     setShowForm(false);
     setNewRdv({ date: '', heure: '', medecin: '', motif: '', notes: '' });
   };
 
   const getStatusBadge = (statut) => {
-    const styles = {
-      'confirmé': 'bg-green-100 text-green-700',
-      'en_attente': 'bg-yellow-100 text-yellow-700',
-      'annulé': 'bg-red-100 text-red-700',
-      'terminé': 'bg-gray-100 text-gray-700'
+    const config = {
+      'confirmé': { bg: 'bg-emerald-50 text-emerald-600 border-emerald-100', label: 'Confirmé' },
+      'en_attente': { bg: 'bg-amber-50 text-amber-600 border-amber-100', label: 'En attente' },
+      'annulé': { bg: 'bg-rose-50 text-rose-600 border-rose-100', label: 'Annulé' },
+      'terminé': { bg: 'bg-slate-50 text-slate-500 border-slate-100', label: 'Terminé' }
     };
-    const labels = {
-      'confirmé': 'Confirmé',
-      'en_attente': 'En attente',
-      'annulé': 'Annulé',
-      'terminé': 'Terminé'
-    };
+    const current = config[statut] || config['terminé'];
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${styles[statut] || 'bg-gray-100 text-gray-700'}`}>
-        {labels[statut] || statut}
+      <span className={`px-4 py-1.5 rounded-full text-xs font-black border uppercase tracking-widest ${current.bg}`}>
+        {current.label}
       </span>
     );
   };
@@ -118,210 +100,160 @@ function RendezVous({ userRole }) {
     return rdv.statut === filter;
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-20 text-center font-bold text-slate-400">Chargement de l'agenda...</div>;
 
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Mes Rendez-vous</h1>
+    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-black text-slate-800 tracking-tight">Agenda Médical</h1>
+          <p className="text-slate-500 font-medium mt-1">Gérez vos consultations et rendez-vous à venir.</p>
+        </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          className="flex items-center justify-center space-x-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform hover:scale-105 active:scale-95"
         >
           <FaPlus />
-          <span>Nouveau rendez-vous</span>
+          <span>Prendre RDV</span>
         </button>
       </div>
 
-      {/* Filtres */}
-      <div className="bg-white rounded-xl shadow-md p-4">
-        <div className="flex flex-wrap gap-2">
+      {/* FILTERS BAR */}
+      <div className="flex overflow-x-auto pb-2 gap-3 no-scrollbar">
+        {['tous', 'avenir', 'passes', 'confirmé', 'en_attente'].map((f) => (
           <button
-            onClick={() => setFilter('tous')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'tous' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-6 py-2.5 rounded-2xl text-sm font-bold whitespace-nowrap transition-all border ${
+              filter === f 
+              ? 'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200' 
+              : 'bg-white text-slate-500 border-slate-100 hover:border-blue-200 hover:text-blue-600'
             }`}
           >
-            Tous
+            {f.charAt(0).toUpperCase() + f.slice(1).replace('_', ' ')}
           </button>
-          <button
-            onClick={() => setFilter('avenir')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'avenir' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            À venir
-          </button>
-          <button
-            onClick={() => setFilter('passes')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'passes' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Passés
-          </button>
-          <button
-            onClick={() => setFilter('confirmé')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'confirmé' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Confirmés
-          </button>
-          <button
-            onClick={() => setFilter('en_attente')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'en_attente' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            En attente
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* Formulaire nouveau rendez-vous */}
+      {/* FORM MODAL (Overlay style) */}
       {showForm && (
-        <div className="bg-white rounded-xl shadow-md p-6 animate-fade-in">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Prendre un rendez-vous</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={newRdv.date}
+        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-blue-50 p-8 md:p-12 relative animate-in zoom-in-95 duration-300">
+          <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600"><FaCalendarAlt size={18}/></div>
+            Nouveau Rendez-vous
+          </h2>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="group">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Médecin & Spécialité</label>
+                <select
+                  name="medecin"
+                  value={newRdv.medecin}
                   onChange={handleInputChange}
-                  className="input-field"
+                  className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-blue-50 transition-all font-bold text-slate-700 appearance-none"
                   required
-                />
+                >
+                  <option value="">Choisir un praticien...</option>
+                  {medecins.map(med => (
+                    <option key={med.id} value={med.id}>{med.nom} ({med.specialite})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Date</label>
+                  <input type="date" name="date" value={newRdv.date} onChange={handleInputChange} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-blue-50 font-bold text-slate-700" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Heure</label>
+                  <input type="time" name="heure" value={newRdv.heure} onChange={handleInputChange} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-blue-50 font-bold text-slate-700" required />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Motif de consultation</label>
+                <input type="text" name="motif" value={newRdv.motif} onChange={handleInputChange} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-blue-50 font-bold text-slate-700" placeholder="Ex: Douleurs abdominales, Suivi..." required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Heure</label>
-                <input
-                  type="time"
-                  name="heure"
-                  value={newRdv.heure}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  required
-                />
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Notes ou symptômes</label>
+                <textarea name="notes" value={newRdv.notes} onChange={handleInputChange} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-blue-50 font-bold text-slate-700 h-[100px]" placeholder="Optionnel..." />
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Médecin</label>
-              <select
-                name="medecin"
-                value={newRdv.medecin}
-                onChange={handleInputChange}
-                className="input-field"
-                required
-              >
-                <option value="">Sélectionner un médecin</option>
-                {medecins.map(med => (
-                  <option key={med.id} value={med.id}>
-                    {med.nom} - {med.specialite}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Motif</label>
-              <input
-                type="text"
-                name="motif"
-                value={newRdv.motif}
-                onChange={handleInputChange}
-                className="input-field"
-                placeholder="Ex: Consultation, analyse, suivi..."
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
-              <textarea
-                name="notes"
-                value={newRdv.notes}
-                onChange={handleInputChange}
-                className="input-field"
-                rows="3"
-                placeholder="Informations complémentaires..."
-              ></textarea>
-            </div>
-
-            <div className="flex space-x-3">
-              <button type="submit" className="btn-primary">
-                Confirmer le rendez-vous
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Annuler
-              </button>
+            <div className="md:col-span-2 flex gap-4 pt-4">
+              <button type="submit" className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 shadow-lg transition-all">Confirmer la demande</button>
+              <button type="button" onClick={() => setShowForm(false)} className="px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all">Annuler</button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Liste des rendez-vous */}
-      <div className="space-y-4">
-        {filteredRdv.map((rdv) => (
-          <div key={rdv.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="flex items-start space-x-4">
-                <div className="bg-primary-100 p-3 rounded-lg">
-                  <FaCalendarAlt className="text-primary-600 text-xl" />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="font-semibold text-gray-800">{rdv.medecin}</h3>
-                    <span className="text-sm text-gray-600">{rdv.specialite}</span>
-                    {getStatusBadge(rdv.statut)}
-                  </div>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-                    <span className="flex items-center space-x-1">
-                      <FaCalendarAlt className="text-gray-400" />
-                      <span>{new Date(rdv.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <FaClock className="text-gray-400" />
-                      <span>{rdv.heure}</span>
-                    </span>
-                  </div>
-                  <p className="text-gray-700"><span className="font-medium">Motif:</span> {rdv.motif}</p>
-                  {rdv.notes && (
-                    <p className="text-sm text-gray-600 mt-2"><span className="font-medium">Notes:</span> {rdv.notes}</p>
-                  )}
-                </div>
+      {/* APPOINTMENTS LIST */}
+      <div className="grid grid-cols-1 gap-6">
+        {filteredRdv.length > 0 ? filteredRdv.map((rdv) => (
+          <div key={rdv.id} className="group bg-white rounded-[2rem] p-6 md:p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all">
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
+              {/* Left: Date Block */}
+              <div className="flex flex-col items-center justify-center w-24 h-24 bg-blue-50 text-blue-600 rounded-3xl shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
+                <span className="text-xs font-black uppercase tracking-widest">
+                  {new Date(rdv.date).toLocaleDateString('fr-FR', { month: 'short' })}
+                </span>
+                <span className="text-3xl font-black leading-none my-1">
+                  {new Date(rdv.date).getDate()}
+                </span>
+                <span className="text-[10px] font-bold opacity-80 uppercase tracking-tighter">
+                  {rdv.heure}
+                </span>
               </div>
 
-              {userRole === 'medecin' && rdv.statut === 'en_attente' && (
-                <div className="flex space-x-2 mt-4 md:mt-0">
-                  <button className="flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
-                    <FaCheck />
-                    <span>Confirmer</span>
-                  </button>
-                  <button className="flex items-center space-x-1 px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
-                    <FaTimes />
-                    <span>Annuler</span>
-                  </button>
+              {/* Center: Info */}
+              <div className="flex-1 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h3 className="text-xl font-black text-slate-800">{rdv.medecin}</h3>
+                  {getStatusBadge(rdv.statut)}
                 </div>
-              )}
+                <div className="flex flex-wrap gap-y-2 gap-x-6">
+                  <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                    <FaUserMd className="text-blue-600"/> {rdv.specialite}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                    <FaNotesMedical className="text-blue-600"/> {rdv.motif}
+                  </div>
+                </div>
+                {rdv.notes && (
+                  <p className="text-sm text-slate-400 bg-slate-50 p-3 rounded-xl border border-slate-100 inline-block">
+                    <span className="font-black text-slate-500 mr-2 uppercase text-[10px]">Note:</span>
+                    {rdv.notes}
+                  </p>
+                )}
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex flex-row md:flex-col gap-2 shrink-0">
+                {userRole === 'medecin' && rdv.statut === 'en_attente' ? (
+                  <>
+                    <button className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-xs hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                      <FaCheck /> CONFIRMER
+                    </button>
+                    <button className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-rose-600 border border-rose-100 rounded-xl font-black text-xs hover:bg-rose-50 transition-all">
+                      <FaTimes /> REFUSER
+                    </button>
+                  </>
+                ) : (
+                  <button className="px-6 py-3 bg-slate-50 text-slate-500 rounded-xl font-black text-[10px] hover:bg-slate-100 transition-all border border-slate-100">
+                    DÉTAILS DU RDV
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="text-center py-20 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+            <p className="text-slate-400 font-bold">Aucun rendez-vous trouvé dans cette catégorie.</p>
+          </div>
+        )}
       </div>
     </div>
   );
