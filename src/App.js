@@ -3,14 +3,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { motion, AnimatePresence } from 'framer-motion';
 import './index.css';
 
-// Import des composants
+// Composants
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
 import PrivateRoute from './components/PrivateRoute';
 import HeroSection from './components/HeroSection';
 
-// Import des pages
+// Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -18,11 +18,13 @@ import DossierMedical from './pages/DossierMedical';
 import RendezVous from './pages/RendezVous';
 import Messagerie from './pages/Messagerie';
 import Profil from './pages/Profil';
+import PatientDetails from './pages/PatientDetails';
+import MedecinDetails from './pages/MedecinDetails';
+import PatientProfil from './pages/PatientProfil';
+import MesPatients from './pages/MesPatients';
+import Consultations from './pages/Consultations'; 
 
-// Import du contexte d'authentification
 import { useAuth } from './contexts/AuthContext';
-
-// Import des icônes
 import { FaHeartbeat } from 'react-icons/fa';
 
 function App() {
@@ -30,21 +32,15 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  // Gestion de la sidebar sur mobile
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true);
-      }
+      setSidebarOpen(window.innerWidth >= 1024);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Message de bienvenue à la connexion
   useEffect(() => {
     if (isAuthenticated && user) {
       setShowWelcome(true);
@@ -60,14 +56,21 @@ function App() {
     in: { opacity: 1, y: 0 },
     out: { opacity: 0, y: -20 },
   };
-
   const pageTransition = { type: 'tween', ease: 'anticipate', duration: 0.5 };
+
+  const wrap = (key, Component, props = {}) => (
+    <PrivateRoute isAuthenticated={isAuthenticated}>
+      <motion.div key={key} initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
+        <Component {...props} />
+      </motion.div>
+    </PrivateRoute>
+  );
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
         <div className="text-center z-10">
-          <motion.div 
+          <motion.div
             animate={{ scale: [1, 1.2, 1], rotate: [0, 360] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="bg-white p-6 rounded-full shadow-2xl mb-6 inline-block"
@@ -81,39 +84,39 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen flex flex-col bg-slate-50">
-        
-        {/* Notification de Bienvenue */}
+
+        {/* Notification Bienvenue */}
         <AnimatePresence>
           {showWelcome && (
-            <motion.div 
-              initial={{ y: -100, x: '-50%' }} 
-              animate={{ y: 20, x: '-50%' }} 
+            <motion.div
+              initial={{ y: -100, x: '-50%' }}
+              animate={{ y: 20, x: '-50%' }}
               exit={{ y: -100, x: '-50%' }}
-              className="fixed left-1/2 z-[100] bg-white border-l-4 border-blue-600 shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-4"
+              className="fixed left-1/2 z-[100] bg-white border-l-4 border-green-500 shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-4"
             >
-              <FaHeartbeat className="text-blue-600 animate-pulse text-xl" />
+              <FaHeartbeat className="text-green-500 animate-pulse text-xl" />
               <span className="font-bold text-slate-800">Bienvenue, {user?.prenom || 'Utilisateur'} ! 👋</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Header - Affiché uniquement si connecté */}
+        {/* Header */}
         {isAuthenticated && (
           <div className="fixed top-0 left-0 right-0 z-40">
             <Header userRole={user?.role} onLogout={logout} toggleSidebar={toggleSidebar} />
           </div>
         )}
-        
+
         <div className={`flex flex-1 ${isAuthenticated ? 'pt-16' : ''}`}>
-          
-          {/* Sidebar - Affichée uniquement si connecté */}
+
+          {/* Sidebar */}
           <AnimatePresence>
             {isAuthenticated && sidebarOpen && (
-              <motion.div 
-                initial={{ x: -300 }} 
-                animate={{ x: 0 }} 
+              <motion.div
+                initial={{ x: -300 }}
+                animate={{ x: 0 }}
                 exit={{ x: -300 }}
                 className="fixed left-0 top-16 bottom-0 z-30"
               >
@@ -122,78 +125,53 @@ function App() {
             )}
           </AnimatePresence>
 
-          {/* Main Content */}
+          {/* Main */}
           <main className={`flex-1 transition-all duration-300 ${isAuthenticated && sidebarOpen ? 'lg:ml-64' : ''} ${isAuthenticated ? 'p-6' : ''}`}>
             <AnimatePresence mode="wait">
               <Routes>
-                {/* --- ROUTES PUBLIQUES --- */}
+
+                {/* ── PUBLIQUES ── */}
+                <Route path="/" element={!isAuthenticated ? <HeroSection /> : <Navigate to="/dashboard" />} />
                 <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
                 <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
-                <Route path="/" element={!isAuthenticated ? <HeroSection /> : <Navigate to="/dashboard" />} />
 
-                {/* --- ROUTES PROTÉGÉES (CORRIGÉES) --- */}
-                
-                {/* Dashboard générique (celui vers lequel on redirige par défaut) */}
-                <Route path="/dashboard" element={
-                  <PrivateRoute isAuthenticated={isAuthenticated}>
-                    <motion.div key="dash" initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <Dashboard userRole={user?.role} />
-                    </motion.div>
-                  </PrivateRoute>
-                } />
-
-                {/* Ajout des alias pour éviter l'erreur 404 après le login */}
+                {/* ── DASHBOARD ── */}
+                <Route path="/dashboard" element={wrap('dash', Dashboard, { userRole: user?.role })} />
                 <Route path="/dashboard-patient" element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard-medecin" element={<Navigate to="/dashboard" />} />
 
-                <Route path="/dossier-medical" element={
-                  <PrivateRoute isAuthenticated={isAuthenticated}>
-                    <motion.div key="dossier" initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <DossierMedical userRole={user?.role} />
-                    </motion.div>
-                  </PrivateRoute>
-                } />
+                {/* ── COMMUN ── */}
+                <Route path="/dossier-medical" element={wrap('dossier', DossierMedical, { userRole: user?.role })} />
+                <Route path="/rendez-vous" element={wrap('rdv', RendezVous, { userRole: user?.role })} />
+                <Route path="/messagerie" element={wrap('msg', Messagerie, { userRole: user?.role })} />
+                <Route path="/profil" element={wrap('prof', Profil, { userRole: user?.role })} />
 
-                <Route path="/rendez-vous" element={
-                  <PrivateRoute isAuthenticated={isAuthenticated}>
-                    <motion.div key="rdv" initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <RendezVous userRole={user?.role} />
-                    </motion.div>
-                  </PrivateRoute>
-                } />
+                {/* ── MEDECIN UNIQUEMENT ── */}
+                <Route path="/patients" element={wrap('patients', MesPatients)} />
+                <Route path="/consultations" element={wrap('consultations', Consultations)} />
 
-                <Route path="/messagerie" element={
-                  <PrivateRoute isAuthenticated={isAuthenticated}>
-                    <motion.div key="msg" initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <Messagerie userRole={user?.role} />
-                    </motion.div>
-                  </PrivateRoute>
-                } />
+                {/* ── QR CODE ── */}
+                <Route path="/patient-details" element={wrap('patient-details', PatientDetails)} />
+                <Route path="/medecin-details" element={wrap('medecin-details', MedecinDetails)} />
+                <Route path="/profil-patient" element={wrap('profil-patient', PatientProfil)} />
 
-                <Route path="/profil" element={
-                  <PrivateRoute isAuthenticated={isAuthenticated}>
-                    <motion.div key="prof" initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <Profil userRole={user?.role} />
-                    </motion.div>
-                  </PrivateRoute>
-                } />
-
-                {/* --- GESTION ERREUR 404 --- */}
+                {/* ── 404 ── */}
                 <Route path="*" element={
                   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
                     <h1 className="text-9xl font-black text-blue-100 relative">
-                      404 
+                      404
                       <span className="absolute inset-0 flex items-center justify-center text-4xl text-blue-600">Oups !</span>
                     </h1>
-                    <p className="text-slate-500 mb-8 font-medium text-xl">La page que vous cherchez n'existe pas ou n'est pas encore créée.</p>
-                    <button 
-                      onClick={() => window.location.href="/"} 
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg"
+                    <p className="text-slate-500 mb-8 font-medium text-xl">La page que vous cherchez n'existe pas.</p>
+                    <button
+                      onClick={() => window.location.href = "/"}
+                      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg"
                     >
                       Retour à l'accueil
                     </button>
                   </div>
                 } />
+
               </Routes>
             </AnimatePresence>
           </main>

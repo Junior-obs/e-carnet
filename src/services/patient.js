@@ -1,6 +1,7 @@
 import api, { get, post, put, del } from './api';
 
 // Service pour les patients
+
 class PatientService {
   // Récupérer le profil du patient
   async getProfile() {

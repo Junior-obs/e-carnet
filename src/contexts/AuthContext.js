@@ -12,9 +12,9 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+ const login = async (email, password) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch("http://192.168.1.16:5000/api/auth/login", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -23,6 +23,15 @@ export function AuthProvider({ children }) {
       if (res.ok) {
         setUser(data.user);
         localStorage.setItem('e_carnet_user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+
+        // Vérifier si une redirection est en attente
+        const redirect = localStorage.getItem('redirect_after_login');
+        if (redirect) {
+          localStorage.removeItem('redirect_after_login');
+          window.location.href = redirect;
+        }
+
         return { success: true, role: data.user.role };
       }
       return { success: false, error: data.message };
@@ -33,17 +42,17 @@ export function AuthProvider({ children }) {
 
   const register = async (userData) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch("http://192.168.1.16:5000/api/auth/register", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            nom: userData.nom,
-            prenom: userData.prenom,
-            email: userData.email,
-            password: userData.password,
-            role: userData.role,
-            date_naissance: userData.dateNaissance, // On envoie avec l'underscore pour le SQL
-            specialite: userData.specialite
+          nom: userData.nom,
+          prenom: userData.prenom,
+          email: userData.email,
+          password: userData.password,
+          role: userData.role,
+          date_naissance: userData.dateNaissance,
+          specialite: userData.specialite
         })
       });
       const data = await res.json();
@@ -56,11 +65,12 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('e_carnet_user');
+    localStorage.removeItem('token');
     window.location.href = "/login";
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
